@@ -1,0 +1,38 @@
+version: "3"
+
+# Define Services
+services:
+  db:
+    container_name: mysqldb
+    image: mysql
+    # Initial mysql db with sql init.sql file
+    command: --init-file /data/application/init.sql
+    volumes:
+        - ./init.sql:/data/application/init.sql
+
+    # Define varaible using env file contents
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  # Build Go app from Dockerfile
+  simple_go_api:
+    container_name: simple-go-api
+    build: .
+    ports:
+      - 8080:8080
+    links:
+      - db
+  # Using phpmyadmin for better mysql management, not necessary
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - 8088:80
